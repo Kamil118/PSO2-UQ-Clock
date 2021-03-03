@@ -10,7 +10,7 @@ namespace Examples
 	{
 		public static void Main(string[] _)
 		{
-			using (var example = new Example())
+			using (var example = new UQ_Clock())
 			{
 				example.Run();
 			}
