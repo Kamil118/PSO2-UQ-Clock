@@ -23,9 +23,9 @@ A simple [GameOverlay.NET](https://github.com/michel-pi/GameOverlay.Net) based o
 
 `"X_offset_px":` Flat horizontal offset of alignment point. Value of 100 will cause the offset to be shifted 100 pixels right *after* accounting for X_offset_ratio.
 
-`"Y_offset_ratio":` Rational vertiacl offset of alignment point. Value of 0 will cause it to be located at topmost edge of the screen, when value of 1 will place it on the bottommost edge of the screen.
+`"Y_offset_ratio":` Rational vertical offset of alignment point. Value of 0 will cause it to be located at topmost edge of the screen, when value of 1 will place it on the bottommost edge of the screen.
 
-`"Y_offset_px":` Flat vertiacl offset of alignment point. Value of 100 will cause the offset to be shifted 100 pixels down *after* accounting for Y_offset_ratio.
+`"Y_offset_px":` Flat vertical offset of alignment point. Value of 100 will cause the offset to be shifted 100 pixels down *after* accounting for Y_offset_ratio.
 
 `"time_format":` `format` string directly provided to [System.DateTime.ToString(string format, IFormatProvider provider)](https://docs.microsoft.com/en-us/dotnet/api/system.datetime.tostring?view=net-5.0) to convert display time.
 
