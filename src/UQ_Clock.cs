@@ -131,7 +131,7 @@ namespace Examples
 		{
 			try
 			{
-
+				Console.WriteLine("PSO2 UQ Clock by Kamil118");
 				read_config();
 
 				if (config.use_public_calendars_only)
