@@ -5,6 +5,7 @@
     "END: Scheduled Maintenance"
   ],
   "calendar_id": "nujrnhog654g3v0m0ljmjbp790@group.calendar.google.com",
+  "use_public_calendars_only": true,
   "font_color": {
     "r": 100,
     "g": 150,
@@ -16,5 +17,16 @@
     "g": 0,
     "b": 0,
     "a": 0.3
-  }
+  },
+  "align": "right",
+  "font_size": 14,
+  "font_name": "consolas",
+  "X_offset_ratio": 0.8,
+  "X_offset_px": 0,
+  "Y_offset_ratio": 0,
+  "Y_offset_px": 50,
+  "time_format": "t",
+  "culture": "de-DE",
+  "hapening_string": " happening at: ",
+  "clock_separator": " "
 }

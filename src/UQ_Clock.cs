@@ -28,10 +28,7 @@ namespace Examples
 		private readonly Dictionary<string, Font> _fonts;
 		private readonly Dictionary<string, Image> _images;
 
-		private Geometry _gridGeometry;
-		private Rectangle _gridBounds;
-
-		static string[] Scopes = { CalendarService.Scope.CalendarEventsReadonly};
+		private string[] Scopes = { "" };
 		static string ApplicationName = "PSO2 UQ Clock";
 
 		private struct Config
@@ -46,29 +43,38 @@ namespace Examples
 			public string calendar_id;
 			public static readonly string calendar_id_default = "nujrnhog654g3v0m0ljmjbp790@group.calendar.google.com";
 
-			
-			public struct brush_data
-			{
-				[JsonProperty] public int r;
-				[JsonProperty] public int g;
-				[JsonProperty] public int b;
-				[JsonProperty] public Single a;
-				public brush_data(int ri, int gi, int bi,Single ai)
-				{
-					r = ri;
-					g = gi;
-					b = bi;
-					a = ai;
-					return;
-				}
-				public static implicit operator Color(brush_data b) => new Color(b.r,b.g,b.b,b.a);
-			}
-
 			public brush_data font_color;
 			public static readonly brush_data font_color_default = new brush_data(100, 150, 255, 1);
 
 			public brush_data background_color;
 			public static readonly brush_data background_color_default = new brush_data(0, 0, 0, 0.3f);
+
+			public Boolean use_public_calendars_only;
+			public static readonly Boolean use_public_calendars_only_default = true;
+
+			public string align;
+			public int font_size;
+			public string font_name;
+			public Single X_offset_ratio;
+			public int X_offset_px;
+			public Single Y_offset_ratio;
+			public int Y_offset_px;
+			public string time_format;
+			public string culture;
+			public string hapening_string;
+			public string clock_separator;
+
+			public static readonly string align_default = "right";
+			public static readonly int font_size_default = 14;
+			public static readonly string font_name_default = "consolas";
+			public static readonly Single X_offset_ratio_default = 0.9f;
+			public static readonly int X_offset_px_default = 0;
+			public static readonly Single Y_offset_ratio_default = 0f;
+			public static readonly int Y_offset_px_default = 0;
+			public static readonly string time_format_default = "t";
+			public static readonly string culture_default = "de-DE";
+			public static readonly string hapening_string_default = " happening at: ";
+			public static readonly string clock_separator_default = " ";
 
 			public void Set_defaults()
 			{
@@ -76,7 +82,37 @@ namespace Examples
 				calendar_id = calendar_id_default;
 				font_color = font_color_default;
 				background_color = background_color_default;
+				use_public_calendars_only = use_public_calendars_only_default;
+				align = align_default;
+				font_size = font_size_default;
+				font_name = font_name_default;
+				X_offset_ratio = X_offset_ratio_default;
+				X_offset_px = Y_offset_px_default;
+				Y_offset_ratio = Y_offset_ratio_default;
+				Y_offset_px = Y_offset_px_default;
+				time_format = time_format_default;
+				culture = culture_default;
+				hapening_string = hapening_string_default;
+				clock_separator = clock_separator_default;
+		}
+
+			public struct brush_data
+			{
+				[JsonProperty] public int r;
+				[JsonProperty] public int g;
+				[JsonProperty] public int b;
+				[JsonProperty] public Single a;
+				public brush_data(int ri, int gi, int bi, Single ai)
+				{
+					r = ri;
+					g = gi;
+					b = bi;
+					a = ai;
+					return;
+				}
+				public static implicit operator Color(brush_data b) => new Color(b.r, b.g, b.b, b.a);
 			}
+
 		};
 
 		private Config config;
@@ -95,6 +131,19 @@ namespace Examples
 		{
 			try
 			{
+
+				read_config();
+
+				if (config.use_public_calendars_only)
+				{
+					Scopes[0] ="https://www.googleapis.com/auth/calendar.events.public.readonly";
+				}
+				else
+				{
+					Scopes[0] = "https://www.googleapis.com/auth/calendar.events.readonly";
+					Console.WriteLine("Using non-public calendars is discouraged and continuing will result in security warning from Google during authentication.");
+				}
+
 				using (var stream =
 				   new FileStream("credential.json", FileMode.Open, FileAccess.Read))
 				{
@@ -128,7 +177,7 @@ namespace Examples
 			now = DateTime.Now;
 			next_UQ_start_time = DateTime.Now;
 
-			read_config();
+			
 
 			google_calendar();
 
@@ -159,47 +208,32 @@ namespace Examples
 
 		private void _window_SetupGraphics(object sender, SetupGraphicsEventArgs e)
 		{
-			var gfx = e.Graphics;
-
-			if (e.RecreateResources)
+			try
 			{
-				foreach (var pair in _brushes) pair.Value.Dispose();
-				foreach (var pair in _images) pair.Value.Dispose();
-			}
+				var gfx = e.Graphics;
 
-			_brushes["black"] = gfx.CreateSolidBrush(0, 0, 0);
-			_brushes["white"] = gfx.CreateSolidBrush(255, 255, 255);
-			_brushes["red"] = gfx.CreateSolidBrush(255, 0, 0);
-			_brushes["green"] = gfx.CreateSolidBrush(0, 255, 0);
-			_brushes["blue"] = gfx.CreateSolidBrush(0, 0, 255);
-			_brushes["background"] = gfx.CreateSolidBrush(0, 0, 0,0f);
+				if (e.RecreateResources)
+				{
+					foreach (var pair in _brushes) pair.Value.Dispose();
+					foreach (var pair in _images) pair.Value.Dispose();
+				}
 
-			_brushes["font_color"] = gfx.CreateSolidBrush(config.font_color);
-			_brushes["overlay"] = gfx.CreateSolidBrush(config.background_color);
+				_brushes["background"] = gfx.CreateSolidBrush(0,0,0,0);
+				_brushes["font_color"] = gfx.CreateSolidBrush(config.font_color);
+				_brushes["overlay"] = gfx.CreateSolidBrush(config.background_color);
 
-			if (e.RecreateResources) return;
+				if (e.RecreateResources) return;
 
-			_fonts["arial"] = gfx.CreateFont("Arial", 12);
-			_fonts["consolas"] = gfx.CreateFont("Consolas", 14);
-
-			_gridBounds = new Rectangle(20, 60, gfx.Width - 20, gfx.Height - 20);
-			_gridGeometry = gfx.CreateGeometry();
-
-			for (float x = _gridBounds.Left; x <= _gridBounds.Right; x += 20)
+				_fonts["overlay_font"] = gfx.CreateFont(config.font_name, config.font_size);
+			}catch(Exception ex)
 			{
-				var line = new Line(x, _gridBounds.Top, x, _gridBounds.Bottom);
-				_gridGeometry.BeginFigure(line);
-				_gridGeometry.EndFigure(false);
+				Console.WriteLine("Failed to setup graphics context");
+				Console.WriteLine(ex);
+				Console.Write("Config dump: ");
+				Console.WriteLine(JsonConvert.SerializeObject(config));
+				Console.ReadLine();
+				Environment.Exit(-1);
 			}
-
-			for (float y = _gridBounds.Top; y <= _gridBounds.Bottom; y += 20)
-			{
-				var line = new Line(_gridBounds.Left, y, _gridBounds.Right, y);
-				_gridGeometry.BeginFigure(line);
-				_gridGeometry.EndFigure(false);
-			}
-
-			_gridGeometry.Close();
 
 		}
 
@@ -290,11 +324,11 @@ namespace Examples
 		private void _window_DrawGraphics(object sender, DrawGraphicsEventArgs e)
 		{
 			var gfx = e.Graphics;
-			
-			if(next_UQ_start_time < DateTime.Now)
+
+			if (next_UQ_start_time < DateTime.Now)
 			{
 				_events.Remove(_events[0]);
-				if(_events.Count() == 0)
+				if (_events.Count() == 0)
 				{
 					google_calendar();
 
@@ -306,16 +340,35 @@ namespace Examples
 
 			var infoText = new StringBuilder()
 				.Append(next_uq)
-				.Append(" happening at ")
-				.Append(next_UQ_start_time.ToString("t", CultureInfo.CreateSpecificCulture("de-DE")))
-				.Append(" ")
-				.Append(DateTime.Now.ToString("t", CultureInfo.CreateSpecificCulture("de-DE"))).ToString();
+				.Append(config.hapening_string)
+				.Append(next_UQ_start_time.ToString(config.time_format, CultureInfo.CreateSpecificCulture(config.culture)))
+				.Append(config.clock_separator)
+				.Append(DateTime.Now.ToString(config.time_format, CultureInfo.CreateSpecificCulture(config.culture))).ToString();
 
 			gfx.ClearScene(_brushes["background"]);
 
-			gfx.DrawTextWithBackground(_fonts["consolas"], _brushes["font_color"], _brushes["overlay"], (0.9f*Screen.PrimaryScreen.WorkingArea.Width-10*infoText.Length), 50, infoText);
 
-			
+			switch (config.align.ToLower()) {
+				case "left":
+					gfx.DrawTextWithBackground(
+						_fonts["overlay_font"],
+						_brushes["font_color"],
+						_brushes["overlay"],
+						(config.X_offset_px + config.X_offset_ratio * Screen.PrimaryScreen.WorkingArea.Width),
+						 config.Y_offset_px + config.Y_offset_ratio * Screen.PrimaryScreen.WorkingArea.Height,
+						infoText);
+					break;
+				default:
+					gfx.DrawTextWithBackground(
+						_fonts["overlay_font"],
+						_brushes["font_color"],
+						_brushes["overlay"],
+						(config.X_offset_px + config.X_offset_ratio * Screen.PrimaryScreen.WorkingArea.Width - gfx.MeasureString(_fonts["overlay_font"], infoText).X),
+						 config.Y_offset_px + config.Y_offset_ratio * Screen.PrimaryScreen.WorkingArea.Height,
+						infoText);
+					break;
+			}
+
 
 		}
 
